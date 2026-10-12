@@ -3,7 +3,7 @@ import {
   BookOpen,
   Clapperboard,
   Disc3,
-  ExternalLink,
+  Eye,
   Layers,
   LayoutDashboard,
   LogOut,
@@ -13,6 +13,11 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Skeleton } from "@/components/ui/Skeleton";
+import {
+  AccountCard,
+  PanelButton,
+  PanelLink,
+} from "@/components/ui/AccountCard";
 import { cx } from "@/lib/format";
 
 // Admin navigation, grouped by module (each group uses its module colours).
@@ -46,25 +51,26 @@ const NAV = [
   },
 ] as const;
 
-/** Highlighted tab that opens the public website (opens in a new tab so the admin panel stays open). */
-function ViewSiteTab({ compact = false }: { compact?: boolean }) {
+/**
+ * Bottom of the admin side menu: "Admin panel" tab, who is signed in, and two buttons:
+ * "Open user panel" (the public website) and "Sign out".
+ */
+function AdminAccount({ onSignOut }: { onSignOut: () => void }) {
+  const { user } = useAuth();
   return (
-    <a
-      href="/"
-      target="_blank"
-      rel="noreferrer"
-      className={cx(
-        "group relative flex shrink-0 items-center overflow-hidden border border-accent/40 bg-module-gradient font-semibold text-accent-fg transition hover:brightness-110 active:scale-[0.98]",
-        compact
-          ? "gap-2 rounded-full px-4 py-1.5 text-sm"
-          : "gap-3 rounded-xl px-4 py-2.5 text-sm shadow-lg shadow-accent/20"
-      )}
+    <AccountCard
+      label="Admin panel"
+      icon={ShieldCheck}
+      title={user?.name ?? "Administrator"}
+      subtitle={`@${user?.username}`}
     >
-      {/* soft light sheen on hover */}
-      <span className="absolute inset-0 transition opacity-0 pointer-events-none bg-gradient-to-b from-white/20 to-transparent group-hover:opacity-100" />
-      <ExternalLink size={compact ? 15 : 18} className="relative shrink-0" />
-      <span className="relative truncate">User Panel</span>
-    </a>
+      <PanelLink to="/" tone="outline" icon={Eye}>
+        Open user panel
+      </PanelLink>
+      <PanelButton tone="danger" icon={LogOut} onClick={onSignOut}>
+        Sign out
+      </PanelButton>
+    </AccountCard>
   );
 }
 
@@ -79,7 +85,7 @@ const moduleOf = (path: string) =>
         : undefined;
 
 /**
- * Admin frame: only for a signed-in admin (everyone else is sent to Settings).
+ * Admin frame: only for a signed-in admin (everyone else is sent to /login).
  * It has its own layout - top bar + side menu - separate from the public site.
  */
 export function AdminLayout() {
@@ -92,7 +98,9 @@ export function AdminLayout() {
         <Skeleton className="h-64" />
       </div>
     );
-  if (!user || !isAdmin) return <Navigate to="/settings#admin" replace />;
+  if (!user || !isAdmin) return <Navigate to="/login" replace />;
+
+  const signOut = () => void logout();
 
   return (
     <div className="min-h-screen module-bg" data-module={moduleOf(pathname)}>
@@ -111,19 +119,11 @@ export function AdminLayout() {
           <span className="flex items-center gap-1 px-3 py-1 text-xs font-bold tracking-wider uppercase rounded-full bg-accent/15 text-accent">
             <ShieldCheck size={13} /> Admin
           </span>
-          <div className="flex items-center gap-1 ml-auto">
+          <div className="ml-auto">
             <ThemeToggle />
-            <button
-              onClick={() => void logout()}
-              aria-label="Sign out"
-              className="flex items-center gap-2 px-3 py-2 text-sm rounded-xl text-muted hover:bg-red-500/10 hover:text-red-400"
-            >
-              <LogOut size={16} />
-              <span className="hidden sm:block">Sign out</span>
-            </button>
           </div>
         </div>
-        {/* phones / tablets: horizontal menu under the top bar */}
+        {/* phones / tablets: horizontal menu under the top bar (sign out is the last chip) */}
         <nav className="flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar lg:hidden">
           {NAV.map(({ to, label, icon: Icon, ...rest }) => (
             <NavLink
@@ -143,35 +143,50 @@ export function AdminLayout() {
               {label}
             </NavLink>
           ))}
-          <ViewSiteTab compact />
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-2 rounded-full border border-accent/60 bg-accent/10 px-4 py-1.5 text-sm font-semibold text-accent"
+          >
+            <Eye size={15} />
+            Open user panel
+          </Link>
+          <button
+            onClick={signOut}
+            className="flex shrink-0 items-center gap-2 rounded-full border border-line px-4 py-1.5 text-sm font-medium text-muted hover:border-red-400 hover:text-red-400"
+          >
+            <LogOut size={15} />
+            Sign out
+          </button>
         </nav>
       </header>
 
       <div className="flex gap-8 px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:py-8">
-        {/* desktop: side menu */}
-        <aside className="sticky hidden w-56 space-y-1 top-20 h-fit shrink-0 lg:block">
-          {NAV.map(({ to, label, icon: Icon, ...rest }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={"end" in rest}
-              data-module={"module" in rest ? rest.module : undefined}
-              className={({ isActive }) =>
-                cx(
-                  "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition",
-                  isActive
-                    ? "bg-module-gradient text-white shadow-lg shadow-m2/20"
-                    : "text-muted hover:bg-elevated hover:text-fg"
-                )
-              }
-            >
-              <Icon size={18} />
-              {label}
-            </NavLink>
-          ))}
-          {/* divider + highlighted link to the public site, right after "Books" */}
-          <div className="!my-3 border-t border-line" />
-          <ViewSiteTab />
+        {/* desktop: side menu - links on top, account (Open user panel + Sign out) pinned to the bottom */}
+        <aside className="sticky top-20 hidden h-[calc(100vh-6.5rem)] w-56 shrink-0 flex-col lg:flex">
+          <div className="space-y-1">
+            {NAV.map(({ to, label, icon: Icon, ...rest }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={"end" in rest}
+                data-module={"module" in rest ? rest.module : undefined}
+                className={({ isActive }) =>
+                  cx(
+                    "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition",
+                    isActive
+                      ? "bg-module-gradient text-white shadow-lg shadow-m2/20"
+                      : "text-muted hover:translate-x-1 hover:bg-elevated hover:text-fg"
+                  )
+                }
+              >
+                <Icon size={18} />
+                {label}
+              </NavLink>
+            ))}
+          </div>
+          <div className="pt-4 mt-auto">
+            <AdminAccount onSignOut={signOut} />
+          </div>
         </aside>
         <main className="flex-1 min-w-0">
           <Outlet />

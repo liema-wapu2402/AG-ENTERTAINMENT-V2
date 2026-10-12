@@ -3,13 +3,15 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Eye,
-  LogOut,
+  LayoutDashboard,
+  LogIn,
   Search,
   ShieldCheck,
   X,
 } from "lucide-react";
 import { MODULES } from "@/lib/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { AccountCard, PanelLink } from "@/components/ui/AccountCard";
 import { SearchBox } from "./SearchBox";
 import { cx } from "@/lib/format";
 
@@ -21,10 +23,11 @@ interface Props {
 }
 
 /**
- * Compact account chip at the bottom of the sidebar.
- *  - nobody signed in -> "User panel" (links to the admin sign in)
- *  - admin signed in  -> "Admin panel" (links to /admin) + small sign out button
- * In the collapsed rail it shrinks to a single icon.
+ * Account tab at the bottom of the public sidebar.
+ *  - nobody signed in -> "User panel" with a Sign in button (opens /login)
+ *  - admin signed in  -> still "User panel", with an "Open admin panel" button
+ *    (signing out lives inside the admin panel)
+ * In the collapsed rail it shrinks to a single icon button.
  */
 function AccountPanel({
   rail,
@@ -33,49 +36,39 @@ function AccountPanel({
   rail: boolean;
   onNavigate: () => void;
 }) {
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin } = useAuth();
   const admin = Boolean(user && isAdmin);
-  const Icon = admin ? ShieldCheck : Eye;
-  const label = admin ? "Admin panel" : "User panel";
-  const to = admin ? "/admin" : "/settings#admin";
-  const title = admin
-    ? `Admin panel - ${user!.name}`
-    : "User panel - admin sign in";
+
+  if (rail) {
+    return (
+      <Link
+        to={admin ? "/admin" : "/login"}
+        onClick={onNavigate}
+        title={admin ? "Open admin panel" : "User panel - sign in"}
+        className="items-center justify-center hidden w-full transition border h-11 rounded-xl border-accent/40 bg-accent/10 text-accent hover:bg-accent hover:text-accent-fg lg:flex"
+      >
+        {admin ? <ShieldCheck size={20} /> : <Eye size={20} />}
+      </Link>
+    );
+  }
 
   return (
-    <div
-      className={cx(
-        "flex min-w-0 items-center gap-1.5",
-        rail ? "lg:w-full" : "flex-1"
-      )}
+    <AccountCard
+      label="User panel"
+      icon={Eye}
+      title={admin ? user!.name : "Visitor"}
+      subtitle={admin ? `Signed in as @${user!.username}` : "View only"}
     >
-      <Link
-        to={to}
-        onClick={onNavigate}
-        title={title}
-        className={cx(
-          "flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-2.5 text-[11px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent hover:text-accent-fg",
-          rail && "lg:justify-center lg:px-0"
-        )}
-      >
-        <Icon size={16} className="shrink-0" />
-        <span className={cx("truncate", rail && "lg:hidden")}>{label}</span>
-      </Link>
-
-      {admin && (
-        <button
-          onClick={() => void logout()}
-          aria-label="Sign out"
-          title="Sign out"
-          className={cx(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition hover:border-red-400 hover:text-red-400",
-            rail && "lg:hidden"
-          )}
-        >
-          <LogOut size={15} />
-        </button>
+      {admin ? (
+        <PanelLink to="/admin" icon={LayoutDashboard} onClick={onNavigate}>
+          Open admin panel
+        </PanelLink>
+      ) : (
+        <PanelLink to="/login" icon={LogIn} onClick={onNavigate}>
+          Sign in
+        </PanelLink>
       )}
-    </div>
+    </AccountCard>
   );
 }
 
@@ -176,7 +169,7 @@ export function Sidebar({
                   rail && "lg:justify-center",
                   isActive
                     ? "bg-accent text-accent-fg shadow-lg shadow-accent/20"
-                    : "text-muted hover:bg-elevated hover:text-fg"
+                    : "text-muted hover:translate-x-1 hover:bg-elevated hover:text-fg"
                 )
               }
             >
@@ -186,28 +179,23 @@ export function Sidebar({
           ))}
         </nav>
 
-        {/* bottom: account chip + collapse toggle (one row expanded, stacked in the rail) */}
-        <div
-          className={cx(
-            "relative flex shrink-0 items-center gap-2 border-t border-line bg-sidebar/60 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur",
-            rail && "lg:flex-col"
-          )}
-        >
+        {/* bottom: account tab (+ collapse button on desktop). Dark/light mode now lives in Settings. */}
+        <div className="relative shrink-0 space-y-2 border-t border-line bg-sidebar/60 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
           <AccountPanel rail={rail} onNavigate={onCloseMobile} />
-
-          {/* desktop only: the drawer on mobile has its own close button */}
-          <button
-            onClick={onToggleCollapsed}
-            aria-label={rail ? "Expand sidebar" : "Collapse sidebar"}
-            aria-expanded={!rail}
-            title={rail ? "Expand sidebar" : "Collapse sidebar"}
+          <div
             className={cx(
-              "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition hover:border-accent/50 hover:bg-elevated hover:text-accent lg:flex",
-              rail && "lg:w-full"
+              "hidden lg:flex",
+              rail ? "justify-center" : "justify-end"
             )}
           >
-            {rail ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}
-          </button>
+            <button
+              onClick={onToggleCollapsed}
+              aria-label={rail ? "Expand sidebar" : "Collapse sidebar"}
+              className="p-2 transition rounded-xl text-muted hover:bg-elevated hover:text-accent"
+            >
+              {rail ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
+            </button>
+          </div>
         </div>
       </aside>
     </>
