@@ -1,0 +1,59 @@
+# Render Blueprint: New > Blueprint > pick this repo.
+# Secrets marked sync:false are asked for in the dashboard (never commit them).
+services:
+  - type: web
+    name: ag-entertainment-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free            # free = uploaded files are wiped on redeploy/restart. See DEPLOYMENT.md (Storage).
+    healthCheckPath: /up
+    envVars:
+      - key: APP_NAME
+        value: AG Entertainment
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false        # php artisan key:generate --show   (or: echo "base64:$(openssl rand -base64 32)")
+      - key: APP_URL
+        sync: false        # https://<your-service>.onrender.com   (no trailing slash)
+      - key: FRONTEND_URL
+        sync: false        # https://<your-project>.vercel.app    (comma-separate extra origins)
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false        # Aiven "Host"
+      - key: DB_PORT
+        sync: false        # Aiven "Port"
+      - key: DB_DATABASE
+        value: defaultdb
+      - key: DB_USERNAME
+        value: avnadmin
+      - key: DB_PASSWORD
+        sync: false        # Aiven "Password"
+      - key: AIVEN_CA_CERT
+        sync: false        # full contents of Aiven's ca.pem (BEGIN/END lines included)
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: public
+      - key: ADMIN_NAME
+        value: Amiel Andrei C. Reyes
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: RUN_SEED
+        value: "true"      # set to "false" after the first successful deploy

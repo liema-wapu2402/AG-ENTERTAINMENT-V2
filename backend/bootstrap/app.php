@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Render terminates HTTPS at its proxy; trust it so Laravel sees https and the real client IP.
+        $middleware->trustProxies(at: '*');
         // CORS is handled by Laravel's built-in HandleCors middleware (see config/cors.php).
         // 'admin' middleware = only users with role=admin (used by /api/admin routes).
         $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
