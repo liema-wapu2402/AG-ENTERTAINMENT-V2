@@ -20,6 +20,7 @@ const AdminDashboardPage = lazy(
   () => import("@/pages/admin/AdminDashboardPage")
 );
 const AdminResourcePage = lazy(() => import("@/pages/admin/AdminResourcePage"));
+const AdminSettingsPage = lazy(() => import("@/pages/admin/AdminSettingsPage"));
 
 /**
  * Routes.
@@ -80,6 +81,7 @@ export default function App() {
             path="books"
             element={<AdminResourcePage key="books" config={resources.books} />}
           />
+          <Route path="settings" element={<AdminSettingsPage />} />
           <Route
             path="books/genres"
             element={

@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
   Music2,
+  Settings,
   ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -49,6 +50,7 @@ const NAV = [
     module: "books",
     end: true,
   },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
 ] as const;
 
 /**

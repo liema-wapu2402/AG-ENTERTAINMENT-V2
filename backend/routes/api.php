@@ -42,6 +42,7 @@ Route::prefix('auth')->group(function () {
 // Visitors never touch these. The React admin area calls them with the admin's token.
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', Admin\DashboardController::class);
+    Route::patch('/account', [Admin\AccountController::class, 'update']);   // admin settings: own account
 
     // extra actions first (so they are not mistaken for {id})
     Route::post('/movies/import', [Admin\MovieAdminController::class, 'import']);   // CSV
