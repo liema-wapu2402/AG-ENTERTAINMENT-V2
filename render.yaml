@@ -6,7 +6,7 @@ services:
     runtime: docker
     rootDir: backend
     dockerfilePath: ./Dockerfile
-    plan: free            # free = uploaded files are wiped on redeploy/restart. See DEPLOYMENT.md (Storage).
+    plan: free # free = uploaded files are wiped on redeploy/restart. See DEPLOYMENT.md (Storage).
     healthCheckPath: /up
     envVars:
       - key: APP_NAME
@@ -16,11 +16,11 @@ services:
       - key: APP_DEBUG
         value: "false"
       - key: APP_KEY
-        sync: false        # php artisan key:generate --show   (or: echo "base64:$(openssl rand -base64 32)")
+        sync: false # php artisan key:generate --show   (or: echo "base64:$(openssl rand -base64 32)")
       - key: APP_URL
-        sync: false        # https://<your-service>.onrender.com   (no trailing slash)
+        sync: false # https://<your-service>.onrender.com   (no trailing slash)
       - key: FRONTEND_URL
-        sync: false        # https://<your-project>.vercel.app    (comma-separate extra origins)
+        sync: false # https://<your-project>.vercel.app    (comma-separate extra origins)
       - key: LOG_CHANNEL
         value: stderr
       - key: LOG_LEVEL
@@ -28,17 +28,17 @@ services:
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
-        sync: false        # Aiven "Host"
+        sync: false # Aiven "Host"
       - key: DB_PORT
-        sync: false        # Aiven "Port"
+        sync: false # Aiven "Port"
       - key: DB_DATABASE
         value: defaultdb
       - key: DB_USERNAME
         value: avnadmin
       - key: DB_PASSWORD
-        sync: false        # Aiven "Password"
+        sync: false # Aiven "Password"
       - key: AIVEN_CA_CERT
-        sync: false        # full contents of Aiven's ca.pem (BEGIN/END lines included)
+        sync: false # full contents of Aiven's ca.pem (BEGIN/END lines included)
       - key: SESSION_DRIVER
         value: database
       - key: CACHE_STORE
@@ -56,4 +56,5 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
       - key: RUN_SEED
-        value: "true"      # set to "false" after the first successful deploy
+        # value: "true"      # set to "false" after the first successful deploy
+        value: "false" # set to "false" after the first successful deploy
