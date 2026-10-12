@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.env
+vendor/
+backend/storage/app/public/*
+!backend/storage/app/public/.gitkeep
