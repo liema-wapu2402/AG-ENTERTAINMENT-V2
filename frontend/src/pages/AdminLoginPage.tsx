@@ -5,7 +5,32 @@ import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
+import { LoadingModal } from "@/components/ui/LoadingModal";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+
+/**
+ * Fills the sign in fields automatically.
+ *   autoLogin = "on"  -> the admin username/email and password are pre-filled,
+ *                        so you only need to click "Sign in".
+ *   autoLogin = "off" -> both fields stay blank for you to type.
+ * Change the value below, then save.
+ * NOTE: set the credentials to match ADMIN_USERNAME/ADMIN_EMAIL and ADMIN_PASSWORD in backend/.env.
+ */
+function getAutoLoginFields(): { login: string; password: string } {
+  const autoLogin = "on" as "on" | "off"; // <- "on" or "off"
+
+  if (autoLogin === "on") {
+    return {
+      login: "admin@ag.test", // matches ADMIN_EMAIL in backend/.env
+      password: "password123",
+    };
+  }
+  return { login: "", password: "" };
+}
+
+// keeps the loading modal visible long enough to be seen on fast connections
+const MIN_LOADING_MS = 700;
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
  * Admin sign in - a page of its own (no sidebar), reached from the
@@ -14,7 +39,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 export default function AdminLoginPage() {
   const { isAdmin, loading, login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ login: "", password: "" });
+  const [form, setForm] = useState(getAutoLoginFields);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -26,7 +51,10 @@ export default function AdminLoginPage() {
     setBusy(true);
     setError("");
     try {
-      await login(form.login, form.password);
+      await Promise.all([
+        login(form.login, form.password),
+        wait(MIN_LOADING_MS),
+      ]);
       navigate("/admin", { replace: true });
     } catch (err) {
       setError(errorMessage(err));
@@ -116,6 +144,8 @@ export default function AdminLoginPage() {
           </form>
         </div>
       </div>
+
+      <LoadingModal open={busy} message="Signing in..." />
     </div>
   );
 }

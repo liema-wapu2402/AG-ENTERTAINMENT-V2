@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
  * Creates the first administrator.
  * Set ADMIN_NAME / ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD in backend/.env before seeding.
  * If ADMIN_PASSWORD is empty a random one is generated and printed ONCE in the terminal.
+ * The admin is matched by username, so re-running updates the existing admin instead of failing.
  */
 class AdminSeeder extends Seeder
 {
@@ -18,10 +19,10 @@ class AdminSeeder extends Seeder
         $password = env('ADMIN_PASSWORD') ?: Str::random(14);
 
         $admin = User::updateOrCreate(
-            ['email' => env('ADMIN_EMAIL', 'admin@agentertainment.test')],
+            ['username' => env('ADMIN_USERNAME', 'admin')],
             [
                 'name' => env('ADMIN_NAME', 'Administrator'),
-                'username' => env('ADMIN_USERNAME', 'admin'),
+                'email' => env('ADMIN_EMAIL', 'admin@agentertainment.test'),
                 'password' => $password,
                 'role' => 'admin',
             ]

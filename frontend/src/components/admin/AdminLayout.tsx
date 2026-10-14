@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation, Navigate } from "react-router-dom";
 import {
   BookOpen,
@@ -14,6 +15,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { LoadingModal } from "@/components/ui/LoadingModal";
 import {
   AccountCard,
   PanelButton,
@@ -57,7 +59,11 @@ const NAV = [
  * Bottom of the admin side menu: "Admin panel" tab, who is signed in, and two buttons:
  * "Open user panel" (the public website) and "Sign out".
  */
-function AdminAccount({ onSignOut }: { onSignOut: () => void }) {
+function AdminAccount({
+  onSignOut,
+}: {
+  onSignOut: () => void | Promise<void>;
+}) {
   const { user } = useAuth();
   return (
     <AccountCard
@@ -93,6 +99,7 @@ const moduleOf = (path: string) =>
 export function AdminLayout() {
   const { user, loading, isAdmin, logout } = useAuth();
   const { pathname } = useLocation();
+  const [signingOut, setSigningOut] = useState(false);
 
   if (loading)
     return (
@@ -102,10 +109,21 @@ export function AdminLayout() {
     );
   if (!user || !isAdmin) return <Navigate to="/login" replace />;
 
-  const signOut = () => void logout();
+  // shows the loading modal, then signs out (the layout redirects to /login by itself)
+  const signOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    await new Promise((r) => setTimeout(r, 700));
+    try {
+      await logout();
+    } catch {
+      /* token is cleared locally even if the request fails */
+    }
+  };
 
   return (
     <div className="min-h-screen module-bg" data-module={moduleOf(pathname)}>
+      <LoadingModal open={signingOut} message="Signing out..." />
       <header className="sticky top-0 z-40 border-b border-line bg-sidebar/90 backdrop-blur-xl">
         <div className="flex items-center gap-3 px-4 h-14 sm:px-6">
           <Link to="/admin" className="flex items-center gap-2">
